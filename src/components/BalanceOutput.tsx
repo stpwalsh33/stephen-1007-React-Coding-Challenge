@@ -64,6 +64,36 @@ export default connect(
     let balance: Balance[] = [];
 
     /* YOUR CODE GOES HERE */
+    const {accounts, journalEntries, userInput} = state;
+
+    for (let i = 0; i < accounts.length; i += 1) {
+      if (
+        userInput.startAccount !== null &&
+        (Number.isNaN(userInput.startAccount) || accounts[i].ACCOUNT >= userInput.startAccount) &&
+        userInput.endAccount !== null &&
+        (Number.isNaN(userInput.endAccount) || accounts[i].ACCOUNT <= userInput.endAccount)
+      ) {
+        const journals = journalEntries.filter(
+          (e) =>
+            e.ACCOUNT === accounts[i].ACCOUNT &&
+            userInput.startPeriod !== null &&
+            (Number.isNaN(userInput.startPeriod.getTime()) || e.PERIOD >= userInput.startPeriod) &&
+            userInput.endPeriod !== null &&
+            (Number.isNaN(userInput.endPeriod.getTime()) || e.PERIOD <= userInput.endPeriod),
+        );
+        const accountDebit = journals.reduce((acc, entry) => acc + entry.DEBIT, 0);
+        const accountCredit = journals.reduce((acc, entry) => acc + entry.CREDIT, 0);
+        if (accountDebit !== 0 || accountCredit !== 0) {
+          balance.push({
+            ACCOUNT: accounts[i].ACCOUNT.toString(),
+            DESCRIPTION: accounts[i].LABEL.toString(),
+            DEBIT: accountDebit,
+            CREDIT: accountCredit,
+            BALANCE: accountDebit - accountCredit,
+          });
+        }
+      }
+    }
 
     const totalCredit = balance.reduce((acc, entry) => acc + entry.CREDIT, 0);
     const totalDebit = balance.reduce((acc, entry) => acc + entry.DEBIT, 0);
